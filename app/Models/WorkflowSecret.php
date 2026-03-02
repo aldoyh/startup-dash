@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 
 class WorkflowSecret extends Model
 {
-    use HasUlids;
+    use HasFactory, HasUlids;
 
     protected $fillable = [
         'name',
