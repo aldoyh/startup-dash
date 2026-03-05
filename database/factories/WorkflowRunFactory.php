@@ -25,7 +25,7 @@ class WorkflowRunFactory extends Factory
 
     public function running(): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'running',
             'started_at' => now(),
         ]);
@@ -33,7 +33,7 @@ class WorkflowRunFactory extends Factory
 
     public function completed(): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'completed',
             'started_at' => now()->subSeconds(5),
             'completed_at' => now(),
@@ -42,7 +42,7 @@ class WorkflowRunFactory extends Factory
 
     public function failed(string $error = 'Execution failed'): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'failed',
             'started_at' => now()->subSeconds(5),
             'completed_at' => now(),
@@ -52,6 +52,6 @@ class WorkflowRunFactory extends Factory
 
     public function test(): static
     {
-        return $this->state(fn () => ['is_test' => true]);
+        return $this->state(fn (array $attributes) => ['is_test' => true]);
     }
 }
