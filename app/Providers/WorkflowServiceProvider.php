@@ -6,6 +6,7 @@ use App\Workflows\Actions\ConditionAction;
 use App\Workflows\Actions\CreateRecordAction;
 use App\Workflows\Actions\DeleteRecordAction;
 use App\Workflows\Actions\HttpRequestAction;
+use App\Workflows\Actions\PromofyAction;
 use App\Workflows\Actions\RunWorkflowAction;
 use App\Workflows\Actions\SendEmailAction;
 use App\Workflows\Actions\SendNotificationAction;
@@ -54,5 +55,6 @@ class WorkflowServiceProvider extends ServiceProvider
         WorkflowRegistry::registerAction(new ConditionAction);
         WorkflowRegistry::registerAction(new TransformDataAction);
         WorkflowRegistry::registerAction(new RunWorkflowAction);
+        WorkflowRegistry::registerAction(new PromofyAction);
     }
 }
