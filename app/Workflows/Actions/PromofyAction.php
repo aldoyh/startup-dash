@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Log;
 
 class PromofyAction implements ActionContract
 {
+    protected const MAX_PROMPT_SEGMENTS = 40;
+
     public function getKey(): string
     {
         return 'promofy';
@@ -213,7 +215,7 @@ class PromofyAction implements ActionContract
 
     protected function buildPrompt(string $sourceType, string $sourceValue, array $segments, int $maxClips, int $maxDuration, string $extraPrompt): string
     {
-        $excerpt = array_slice($segments, 0, 40);
+        $excerpt = array_slice($segments, 0, self::MAX_PROMPT_SEGMENTS);
 
         return trim(implode("\n", [
             'You are PROMOFY, an expert promo editor.',

@@ -56,6 +56,7 @@ class PromofyActionTest extends TestCase
         $this->assertCount(2, $result['clips']);
         $this->assertSame('abc', $result['clips'][0]['video_id']);
         $this->assertSame(2, $result['checkpoints']['next_clip_index']);
-        $this->assertStringContainsString('[1:v:0]', (string) $result['ffmpeg_stitch_command']);
+        $this->assertIsString($result['ffmpeg_stitch_command']);
+        $this->assertStringContainsString('[1:v:0]', $result['ffmpeg_stitch_command']);
     }
 }
