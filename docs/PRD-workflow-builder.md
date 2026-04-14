@@ -135,6 +135,7 @@ interface TriggerContract
 | Condition Branch | `condition` | Evaluate expression → true/false paths |
 | Transform Data | `transform-data` | Map/reshape data between steps |
 | Run Workflow | `run-workflow` | Execute another workflow (max depth: 5) |
+| PROMOFY | `promofy` | Build transcript-driven promo clip plans and ffmpeg commands |
 
 ### Action Interface
 
