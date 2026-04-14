@@ -4,7 +4,7 @@ namespace Tests\Unit\Workflows\Actions;
 
 use App\Models\WorkflowRunStep;
 use App\Workflows\Actions\PromofyAction;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class PromofyActionTest extends TestCase
 {
