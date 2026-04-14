@@ -125,9 +125,9 @@ class PromofyAction implements ActionContract
             ];
 
             $cutCommands[] = sprintf(
-                'ffmpeg -y -ss %s -i %s -t %s -c copy %s',
-                $start,
+                'ffmpeg -y -i %s -ss %s -t %s -c:v libx264 -c:a aac %s',
                 escapeshellarg($videoRef),
+                $start,
                 $duration,
                 escapeshellarg($outputPath)
             );
@@ -312,6 +312,7 @@ class PromofyAction implements ActionContract
 
         $inputArgs = [];
         $filterParts = [];
+        $timelinePosition = (float) ($clips[0]['duration'] ?? 0);
 
         foreach ($clips as $index => $clip) {
             $inputArgs[] = '-i '.escapeshellarg($clip['output_path']);
@@ -320,11 +321,12 @@ class PromofyAction implements ActionContract
                 continue;
             }
 
-            $left = $index === 1 ? '[0:v]' : '[v'.($index - 1).']';
-            $right = '['.$index.':v]';
+            $left = $index === 1 ? '[0:v:0]' : '[v'.($index - 1).']';
+            $right = '['.$index.':v:0]';
             $out = '[v'.$index.']';
-            $offset = max(0, round(($index * max(0.1, $clip['duration'])) - $fadeDuration, 3));
+            $offset = max(0, round($timelinePosition - $fadeDuration, 3));
             $filterParts[] = "{$left}{$right}xfade=transition=fade:duration={$fadeDuration}:offset={$offset}{$out}";
+            $timelinePosition += (float) ($clip['duration'] ?? 0);
         }
 
         $lastStream = '[v'.(count($clips) - 1).']';
@@ -335,7 +337,7 @@ class PromofyAction implements ActionContract
     protected function logStage(string $event, array $context): void
     {
         try {
-            if (Container::getInstance()) {
+            if (Container::getInstance()->bound('log')) {
                 Log::info($event, $context);
             }
         } catch (\Throwable) {

@@ -26,7 +26,8 @@ class PromofyActionTest extends TestCase
         ], $step);
 
         $this->assertCount(1, $result['clips']);
-        $this->assertStringContainsString('ffmpeg -y -ss', $result['ffmpeg_cut_commands'][0]);
+        $this->assertStringContainsString('ffmpeg -y -i', $result['ffmpeg_cut_commands'][0]);
+        $this->assertStringContainsString('-c:v libx264 -c:a aac', $result['ffmpeg_cut_commands'][0]);
         $this->assertSame('/videos/source.mp4', $result['clips'][0]['video_ref']);
         $this->assertSame(0, $result['checkpoints']['resume_from_clip_index']);
     }
@@ -49,11 +50,12 @@ class PromofyActionTest extends TestCase
                     ['video_id' => 'xyz', 'start' => 31, 'end' => 45, 'reason' => 'payoff'],
                 ],
             ]),
-            'resume_from_clip_index' => 1,
+            'resume_from_clip_index' => 0,
         ], $step);
 
-        $this->assertCount(1, $result['clips']);
-        $this->assertSame('xyz', $result['clips'][0]['video_id']);
+        $this->assertCount(2, $result['clips']);
+        $this->assertSame('abc', $result['clips'][0]['video_id']);
         $this->assertSame(2, $result['checkpoints']['next_clip_index']);
+        $this->assertStringContainsString('[1:v:0]', (string) $result['ffmpeg_stitch_command']);
     }
 }
