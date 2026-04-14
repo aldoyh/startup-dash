@@ -129,8 +129,8 @@ class PromofyAction implements ActionContract
             $cutCommands[] = sprintf(
                 'ffmpeg -y -i %s -ss %s -t %s -c:v libx264 -c:a aac %s',
                 escapeshellarg($videoRef),
-                $start,
-                $duration,
+                escapeshellarg((string) $start),
+                escapeshellarg((string) $duration),
                 escapeshellarg($outputPath)
             );
         }
@@ -299,7 +299,10 @@ class PromofyAction implements ActionContract
         }
 
         if (count($clips) === 1) {
-            return 'cp '.escapeshellarg($clips[0]['output_path']).' '.escapeshellarg(rtrim($outputDirectory, '/').'/promofy-final.mp4');
+            return 'ffmpeg -y -i '
+                .escapeshellarg($clips[0]['output_path'])
+                .' -c copy '
+                .escapeshellarg(rtrim($outputDirectory, '/').'/promofy-final.mp4');
         }
 
         $inputArgs = [];
