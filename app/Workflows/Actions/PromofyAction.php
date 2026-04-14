@@ -190,12 +190,7 @@ class PromofyAction implements ActionContract
             }
 
             $videoId = (string) ($entry['video_id'] ?? $sourceValue);
-            $videoRef = match ($sourceType) {
-                'file_path' => $sourceValue,
-                'youtube_video_id' => 'downloads/'.$sourceValue.'.mp4',
-                'youtube_channel_id' => 'downloads/'.$videoId.'.mp4',
-                default => $sourceValue,
-            };
+            $videoRef = $this->buildVideoReference($sourceType, $sourceValue, $videoId);
 
             $normalized[] = [
                 'video_id' => $videoId,
@@ -249,12 +244,7 @@ class PromofyAction implements ActionContract
             }
 
             $videoId = (string) ($clip['video_id'] ?? $sourceValue);
-            $videoRef = match ($sourceType) {
-                'file_path' => $sourceValue,
-                'youtube_video_id' => 'downloads/'.$sourceValue.'.mp4',
-                'youtube_channel_id' => 'downloads/'.$videoId.'.mp4',
-                default => $sourceValue,
-            };
+            $videoRef = $this->buildVideoReference($sourceType, $sourceValue, $videoId);
 
             $normalized[] = [
                 'video_id' => $videoId,
@@ -333,7 +323,26 @@ class PromofyAction implements ActionContract
 
         $lastStream = '[v'.(count($clips) - 1).']';
 
-        return 'ffmpeg -y '.implode(' ', $inputArgs).' -filter_complex '.escapeshellarg(implode(';', $filterParts)).' -map '.escapeshellarg($lastStream).' '.escapeshellarg(rtrim($outputDirectory, '/').'/promofy-final.mp4');
+        $outputPath = rtrim($outputDirectory, '/').'/promofy-final.mp4';
+
+        return 'ffmpeg -y '
+            .implode(' ', $inputArgs)
+            .' -filter_complex '
+            .escapeshellarg(implode(';', $filterParts))
+            .' -map '
+            .escapeshellarg($lastStream)
+            .' '
+            .escapeshellarg($outputPath);
+    }
+
+    protected function buildVideoReference(string $sourceType, string $sourceValue, string $videoId): string
+    {
+        return match ($sourceType) {
+            'file_path' => $sourceValue,
+            'youtube_video_id' => 'downloads/'.$sourceValue.'.mp4',
+            'youtube_channel_id' => 'downloads/'.$videoId.'.mp4',
+            default => $sourceValue,
+        };
     }
 
     protected function logStage(string $event, array $context): void
