@@ -307,7 +307,8 @@ class PromofyAction implements ActionContract
 
         $inputArgs = [];
         $filterParts = [];
-        $timelinePosition = (float) ($clips[0]['duration'] ?? 0);
+        $firstClipDuration = (float) $clips[0]['duration'];
+        $timelinePosition = $firstClipDuration;
 
         foreach ($clips as $index => $clip) {
             $inputArgs[] = '-i '.escapeshellarg($clip['output_path']);
@@ -321,7 +322,7 @@ class PromofyAction implements ActionContract
             $out = '[v'.$index.']';
             $offset = max(0, round($timelinePosition - $fadeDuration, 3));
             $filterParts[] = "{$left}{$right}xfade=transition=fade:duration={$fadeDuration}:offset={$offset}{$out}";
-            $timelinePosition += (float) ($clip['duration'] ?? 0);
+            $timelinePosition += (float) $clip['duration'] - $fadeDuration;
         }
 
         $lastStream = '[v'.(count($clips) - 1).']';
