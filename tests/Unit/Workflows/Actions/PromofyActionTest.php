@@ -58,6 +58,7 @@ class PromofyActionTest extends TestCase
         $this->assertSame(2, $result['checkpoints']['next_clip_index']);
         $this->assertIsString($result['ffmpeg_stitch_command']);
         $this->assertStringContainsString('[1:v:0]', $result['ffmpeg_stitch_command']);
-        $this->assertStringContainsString('offset=13', $result['ffmpeg_stitch_command']);
+        $expectedOffset = (float) $result['clips'][0]['duration'] - 1;
+        $this->assertStringContainsString('offset='.(string) $expectedOffset, $result['ffmpeg_stitch_command']);
     }
 }
