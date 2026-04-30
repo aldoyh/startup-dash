@@ -20,14 +20,14 @@ You are a senior UI/UX engineer specializing in modern, beautiful interfaces. Wh
 - Destructive actions are always `red`, confirmations are always `green`
 
 ### 2. Spacing & Layout
-- Base spacing unit: `4` (1rem). All margins/padding should be multiples of 4 (`p-4`, `p-8`, `p-12`, `gap-6`)
+- Base spacing unit: `4` (1rem). All margins/padding should be multiples of 4 (`p-4`, `p-8`, `p-12`, `gap-4`, `gap-8`)
 - Cards use `rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900`
 - Page content max-width: `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`
 
 ### 3. Color Palette
-- **Primary**: `violet-600` / `violet-500` (hover) — used for CTAs and active states
+- **Primary**: `amber-600` / `amber-500` (hover) — matches `Color::Amber` set in `AdminPanelProvider`
 - **Success**: `emerald-500`
-- **Warning**: `amber-400`
+- **Warning**: `amber-400` (use `amber-300` for dark mode contrast)
 - **Danger**: `rose-500`
 - **Neutral**: `gray-50` through `gray-950` — backgrounds, borders, text
 - Support dark mode on every component: `dark:` variants required
@@ -38,7 +38,7 @@ You are a senior UI/UX engineer specializing in modern, beautiful interfaces. Wh
 - Micro-interactions: scale on button press `active:scale-95`, gentle shadow lift on card hover `hover:shadow-md`
 
 ### 5. Accessibility
-- Every interactive element needs a focus ring: `focus:ring-2 focus:ring-violet-500 focus:ring-offset-2`
+- Every interactive element needs a focus ring: `focus:ring-2 focus:ring-amber-500 focus:ring-offset-2`
 - Minimum tap target: `min-h-[44px] min-w-[44px]`
 - Color is never the only indicator — pair with icons or text labels
 - `aria-*` attributes on dynamic content (modals, dropdowns, live regions)
@@ -50,13 +50,13 @@ You are a senior UI/UX engineer specializing in modern, beautiful interfaces. Wh
 ### Button
 ```blade
 {{-- Primary --}}
-<button class="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-500 active:scale-95 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transition-all duration-200">
+<button class="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-500 active:scale-95 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200">
     <x-heroicon-o-plus class="size-4" />
     Add Item
 </button>
 
 {{-- Secondary --}}
-<button class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-95 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transition-all duration-200">
+<button class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-95 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200">
     Cancel
 </button>
 ```
@@ -70,16 +70,45 @@ You are a senior UI/UX engineer specializing in modern, beautiful interfaces. Wh
 ```
 
 ### Badge / Status Pill
+
+All five workflow run statuses from the data model (`pending`, `running`, `completed`, `failed`, `skipped`):
+
 ```blade
-{{-- Success --}}
+{{-- Pending --}}
+<span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400 ring-1 ring-inset ring-gray-500/20">
+    Pending
+</span>
+
+{{-- Running --}}
+<span class="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-900/20 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-600/20">
+    Running
+</span>
+
+{{-- Completed --}}
 <span class="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 ring-1 ring-inset ring-emerald-600/20">
     Completed
 </span>
 
-{{-- Danger --}}
+{{-- Failed --}}
 <span class="inline-flex items-center rounded-full bg-rose-50 dark:bg-rose-900/20 px-2.5 py-0.5 text-xs font-medium text-rose-700 dark:text-rose-400 ring-1 ring-inset ring-rose-600/20">
     Failed
 </span>
+
+{{-- Skipped --}}
+<span class="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-medium text-slate-500 dark:text-slate-400 ring-1 ring-inset ring-slate-500/20">
+    Skipped
+</span>
+```
+
+In Filament table columns use the matching colors:
+```php
+TextColumn::make('status')->badge()->color(fn($state) => match($state) {
+    'pending'   => 'gray',
+    'running'   => 'info',
+    'completed' => 'success',
+    'failed'    => 'danger',
+    'skipped'   => 'gray',
+}),
 ```
 
 ### Empty State
@@ -103,9 +132,10 @@ You are a senior UI/UX engineer specializing in modern, beautiful interfaces. Wh
 <div x-data="{ open: false }">
     <button @click="open = true" class="...">Open</button>
 
+    {{-- Note: x-trap requires @alpinejs/focus — NOT installed in this project. --}}
+    {{-- Use tabindex management manually or install: pnpm add @alpinejs/focus --}}
     <div
         x-show="open"
-        x-trap="open"
         @keydown.escape.window="open = false"
         class="fixed inset-0 z-50 flex items-center justify-center"
         x-transition:enter="transition ease-out duration-200"
@@ -136,8 +166,8 @@ You are a senior UI/UX engineer specializing in modern, beautiful interfaces. Wh
 <div class="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm p-6">
     <div class="flex items-center justify-between">
         <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Workflows</p>
-        <div class="rounded-lg bg-violet-50 dark:bg-violet-900/20 p-2">
-            <x-heroicon-o-bolt class="size-5 text-violet-600 dark:text-violet-400" />
+        <div class="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-2">
+            <x-heroicon-o-bolt class="size-5 text-amber-600 dark:text-amber-400" />
         </div>
     </div>
     <p class="mt-4 text-3xl font-bold text-gray-900 dark:text-gray-100">{{ $count }}</p>
@@ -163,10 +193,11 @@ You are a senior UI/UX engineer specializing in modern, beautiful interfaces. Wh
 
 ## Filament Customizations
 
-- Override colors in `AppServiceProvider` with Filament's `FilamentColor` using violet as primary
-- Use `->badge()` and `->color()` on table columns for status displays
+- Override colors in `app/Providers/Filament/AdminPanelProvider.php` via `->colors(['primary' => Color::Amber])` — current project default is `Color::Amber`
+- Use `->badge()` and `->color(fn($state) => ...)` on table columns for status displays (see Badge patterns above)
 - Prefer `->description()` on form fields over generic placeholder text
 - Use `->icon()` on navigation items — Heroicons only
+- Use `->schema([])` arrays for `getConfigSchema()` in trigger/action classes — matches `ActionContract` / `TriggerContract` interfaces
 
 ---
 
