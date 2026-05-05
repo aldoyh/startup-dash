@@ -1,10 +1,12 @@
 # /awesome-designs
 
-Apply the **Awesome Designs** skill to the current task.
+Apply the **Awesome Designs v2** skill — Luminous Glass design language with Three.js and glassmorphism.
 
 ## What this command does
 
-Activates the project's design system and UI best-practice guidelines, then applies them to the file or component you specify. Use it whenever you want Claude to generate or review UI code with opinionated, high-quality design patterns for this project's stack (Tailwind CSS 4 · Alpine.js · Livewire · Filament 5 · Blade).
+Activates the project's full design system and applies it to whatever you specify. This is the v2 skill: it includes glassmorphism, animated Three.js backgrounds, glow effects, and a premium component library tuned to this project's stack.
+
+**Stack:** Tailwind CSS 4 · Alpine.js · Livewire 3 · Filament 5.2 · Blade · Three.js
 
 ## Usage
 
@@ -12,30 +14,49 @@ Activates the project's design system and UI best-practice guidelines, then appl
 /awesome-designs [target]
 ```
 
-- **No argument** — Review and improve the last file you discussed or the currently open file.
-- **File path** — Apply awesome designs to that specific Blade / Livewire component.
-- **Description** — Describe a new component to build from scratch.
+- **No argument** — review and upgrade the last file discussed
+- **File path** — apply to a specific Blade / Livewire component
+- **Description** — build a new component from scratch
 
 ## Examples
 
 ```
 /awesome-designs resources/views/livewire/workflow-builder-canvas.blade.php
-/awesome-designs Build a stat dashboard row with 4 KPI cards
-/awesome-designs Review the empty state in the workflow list page
+/awesome-designs Build a glassmorphic dashboard hero with Three.js particle background
+/awesome-designs Add a run history timeline to the WorkflowRun view page
+/awesome-designs Redesign the stat card row with glow effects
+/awesome-designs Build the 3-panel builder layout with glass sidebars
 ```
 
-## Loaded skill
+## What the skill provides
 
-When you run this command, Claude will load and follow all rules in:
+`.claude/skills/awesome-designs.md` — loaded in full when this command runs.
 
-`.claude/skills/awesome-designs.md`
+| Section | Contents |
+|---|---|
+| Design language | Luminous Glass philosophy, color system, typography scale |
+| CSS tokens | `@theme` block with glass variables and glow shadows |
+| Glassmorphism system | 3 glass levels, glass card, glass navbar, glass sidebar, glass modal |
+| Button system | Glow CTA, glass secondary, danger — all with shimmer hover effects |
+| Status badges | All 5 workflow statuses with animated Running pulse dot |
+| Glass stat card | Ambient glow blob, shimmer top line, trend indicator |
+| Empty state | Glass icon container with glow |
+| Workflow builder | 3-panel shell, glass sidebars, node cards by type, SVG connector gradients |
+| Run timeline | Vertical connector, per-step status dots, error display |
+| Three.js — Pattern 1 | Particle network (dashboard background) — `particle-network.js` |
+| Three.js — Pattern 2 | CSS floating orbs (no install needed) |
+| Three.js — Pattern 3 | Node orbit animation (builder canvas backdrop) — `node-orbit.js` |
+| Animation utilities | Stagger entrance, skeleton loader |
+| Filament patterns | Badge + icon columns, toggle helpers, variable interpolation hints |
+| Code quality rules | 8 rules covering dark mode, glass-first, Three.js lifecycle, a11y |
 
-This includes:
-- Design principles (hierarchy, spacing, color palette, motion, a11y)
-- Component patterns (buttons, cards, badges, modals, stat cards)
-- Workflow builder canvas node styles
-- Filament customization guidelines
-- Code quality rules (dark mode, semantic HTML, Tailwind class ordering)
+## Three.js setup (one-time)
+
+```sh
+pnpm add three
+```
+
+Alpine.js (bundled by Filament) handles init/destroy lifecycle via `x-init` + `$cleanup`.
 
 ---
 
