@@ -2,19 +2,20 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Workflow;
 use App\Models\WorkflowRun;
+use BackedEnum;
 use Carbon\Carbon;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 
 class CalendarPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
-    protected static ?string $navigationLabel = 'Calendar';
-    protected static ?string $title = 'Calendar';
-    protected static ?int $navigationSort = 2;
-    protected static string $view = 'filament.pages.calendar-page';
+    protected static BackedEnum|string|null $navigationIcon  = 'heroicon-o-calendar-days';
+    protected static ?string               $navigationLabel = 'Calendar';
+    protected static ?string               $title           = 'Calendar';
+    protected static ?string               $slug            = 'calendar';
+    protected static ?int                  $navigationSort  = 2;
+    protected string                       $view            = 'filament.pages.calendar-page';
 
     public int $year;
     public int $month;
