@@ -99,10 +99,10 @@
     </div>
 
     {{-- ── Day-of-week headers ──────────────────────────────────────────── --}}
-    <div class="grid grid-cols-7 border-b border-white/8">
+    <div class="grid grid-cols-7 border-b border-white/8 bg-white/[0.03]">
         @foreach($dayNames as $i => $name)
-        <div class="py-3 text-center text-xs font-semibold uppercase tracking-widest
-                    {{ in_array($i,[0,6]) ? 'text-gray-600' : 'text-gray-500' }}">
+        <div class="py-3 text-center text-xs font-bold uppercase tracking-widest
+                    {{ in_array($i,[0,6]) ? 'text-amber-400/70' : 'text-gray-300' }}">
             {{ $name }}
         </div>
         @endforeach
