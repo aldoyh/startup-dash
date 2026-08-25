@@ -8,13 +8,26 @@
 </div>
 
 @php
-    $days      = $this->getGridDays();
-    $byDate    = $this->getRunsByDate();
-    $today     = now()->format('Y-m-d');
-    $monthName = \Carbon\Carbon::create($year, $month)->format('F Y');
-    $dayNames  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    $days       = $this->getGridDays();
+    $byDate     = $this->getRunsByDate();
+    $today      = now()->format('Y-m-d');
+    $monthName  = \Carbon\Carbon::create($year, $month)->format('F Y');
+    $dayNames   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     $selectedRuns = $this->getSelectedDayRuns();
+    $health     = $this->getMonthHealth();
+    $load       = $this->getWeekdayLoad();
+    $years      = $this->availableYears();
+    $months     = $this->availableMonths();
+    $healthRing = 'conic-gradient(from 0deg, #34d399 0deg '.($health['percent'] * 3.6).'deg, rgba(255,255,255,0.08) '.($health['percent'] * 3.6).'deg 360deg)';
 @endphp
+
+<div
+    x-data
+    @keydown.window.left="$wire.previousMonth()"
+    @keydown.window.right="$wire.nextMonth()"
+    @keydown.window.t="$wire.goToToday()"
+    class="space-y-6"
+>
 
 {{-- ── Calendar card ────────────────────────────────────────────────────── --}}
 <div class="relative overflow-hidden rounded-2xl
@@ -26,10 +39,10 @@
     <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
 
     {{-- ── Header ──────────────────────────────────────────────────────── --}}
-    <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
+    <div class="flex flex-wrap items-center justify-between gap-4 px-6 py-5 border-b border-white/8">
 
-        {{-- Month / Year --}}
-        <div class="flex items-center gap-4">
+        {{-- Month / Year nav + quick jump --}}
+        <div class="flex items-center gap-3">
             <button wire:click="previousMonth"
                     class="inline-flex items-center justify-center size-9 rounded-xl
                            bg-white/6 hover:bg-white/12 border border-white/10 hover:border-white/20
@@ -40,9 +53,27 @@
                 <x-heroicon-m-chevron-left class="size-4" />
             </button>
 
-            <h2 class="text-xl font-bold text-white tracking-tight min-w-[180px] text-center">
-                {{ $monthName }}
-            </h2>
+            <div class="flex items-center gap-1.5">
+                <select wire:model.live="month" wire:change="jumpToMonth"
+                        class="appearance-none cursor-pointer rounded-lg bg-white/6 hover:bg-white/10 border border-white/10
+                               text-white text-sm font-bold tracking-tight py-1.5 pl-3 pr-7
+                               focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-colors duration-150"
+                        style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke-width=%222%22 stroke=%22%23a1a1aa%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 d=%22M19.5 8.25l-7.5 7.5-7.5-7.5%22 /></svg>'); background-repeat:no-repeat; background-position:right 0.4rem center; background-size:1rem;">
+                    @foreach($months as $num => $label)
+                        <option value="{{ $num }}" class="bg-gray-900 text-white">{{ $label }}</option>
+                    @endforeach
+                </select>
+
+                <select wire:model.live="year" wire:change="jumpToMonth"
+                        class="appearance-none cursor-pointer rounded-lg bg-white/6 hover:bg-white/10 border border-white/10
+                               text-white text-sm font-bold tracking-tight py-1.5 pl-3 pr-7
+                               focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-colors duration-150"
+                        style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke-width=%222%22 stroke=%22%23a1a1aa%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 d=%22M19.5 8.25l-7.5 7.5-7.5-7.5%22 /></svg>'); background-repeat:no-repeat; background-position:right 0.4rem center; background-size:1rem;">
+                    @foreach($years as $y)
+                        <option value="{{ $y }}" class="bg-gray-900 text-white">{{ $y }}</option>
+                    @endforeach
+                </select>
+            </div>
 
             <button wire:click="nextMonth"
                     class="inline-flex items-center justify-center size-9 rounded-xl
@@ -55,32 +86,39 @@
             </button>
         </div>
 
-        {{-- Right controls --}}
-        <div class="flex items-center gap-3">
-            {{-- Mini stats for month --}}
-            @php
-                $monthRuns = $byDate->flatten();
-                $counts = [
-                    'completed' => $monthRuns->where('status','completed')->count(),
-                    'failed'    => $monthRuns->where('status','failed')->count(),
-                    'running'   => $monthRuns->where('status','running')->count(),
-                    'pending'   => $monthRuns->where('status','pending')->count(),
-                ];
-            @endphp
+        {{-- Right controls: health ring + status pills + today --}}
+        <div class="flex items-center gap-4">
+
+            {{-- Month health donut --}}
+            @if($health['total'] > 0)
+            <div class="hidden md:flex items-center gap-2.5" title="{{ $health['percent'] }}% completed vs failed">
+                <div class="relative size-9 rounded-full" style="background:{{ $healthRing }}">
+                    <div class="absolute inset-[3px] rounded-full bg-gray-900 flex items-center justify-center">
+                        <span class="text-[10px] font-bold text-white">{{ $health['percent'] }}%</span>
+                    </div>
+                </div>
+                <div class="text-xs leading-tight">
+                    <p class="font-semibold text-gray-300">Health</p>
+                    <p class="text-gray-500">{{ $health['total'] }} runs</p>
+                </div>
+            </div>
+            <div class="hidden md:block w-px h-8 bg-white/10"></div>
+            @endif
+
             <div class="hidden sm:flex items-center gap-2 text-xs font-medium">
-                @if($counts['completed'])
+                @if($health['completed'])
                 <span class="flex items-center gap-1 rounded-full px-2.5 py-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
-                    <span class="size-1.5 rounded-full bg-emerald-400"></span>{{ $counts['completed'] }}
+                    <span class="size-1.5 rounded-full bg-emerald-400"></span>{{ $health['completed'] }}
                 </span>
                 @endif
-                @if($counts['failed'])
+                @if($health['failed'])
                 <span class="flex items-center gap-1 rounded-full px-2.5 py-1 bg-rose-500/15 text-rose-400 border border-rose-500/25">
-                    <span class="size-1.5 rounded-full bg-rose-400"></span>{{ $counts['failed'] }}
+                    <span class="size-1.5 rounded-full bg-rose-400"></span>{{ $health['failed'] }}
                 </span>
                 @endif
-                @if($counts['running'])
+                @if($health['running'])
                 <span class="flex items-center gap-1 rounded-full px-2.5 py-1 bg-blue-500/15 text-blue-400 border border-blue-500/25">
-                    <span class="size-1.5 rounded-full bg-blue-400 animate-pulse"></span>{{ $counts['running'] }}
+                    <span class="size-1.5 rounded-full bg-blue-400 animate-pulse"></span>{{ $health['running'] }}
                 </span>
                 @endif
             </div>
@@ -98,19 +136,29 @@
         </div>
     </div>
 
-    {{-- ── Day-of-week headers ──────────────────────────────────────────── --}}
+    <div class="overflow-x-auto">
+    <div class="min-w-[720px]">
+
+    {{-- ── Day-of-week headers + weekday load strip ───────────────────────── --}}
     <div class="grid grid-cols-7 border-b border-white/8 bg-white/[0.03]">
         @foreach($dayNames as $i => $name)
-        <div class="py-3 text-center text-xs font-bold uppercase tracking-widest
-                    {{ in_array($i,[0,6]) ? 'text-amber-400/70' : 'text-gray-300' }}">
-            {{ $name }}
+        <div class="py-2.5 text-center">
+            <p class="text-xs font-bold uppercase tracking-widest mb-1.5
+                      {{ in_array($i,[0,6]) ? 'text-amber-400/70' : 'text-gray-300' }}">
+                {{ $name }}
+            </p>
+            {{-- Relative volume bar for this weekday across the visible month --}}
+            <div class="mx-auto h-1 w-8 rounded-full bg-white/8 overflow-hidden">
+                <div class="h-full rounded-full bg-gradient-to-r from-amber-500/70 to-amber-400/70 transition-all duration-500"
+                     style="width: {{ $load[$i] }}%"></div>
+            </div>
         </div>
         @endforeach
     </div>
 
     {{-- ── Day grid ─────────────────────────────────────────────────────── --}}
     <div class="grid grid-cols-7 divide-x divide-y divide-white/[0.04]">
-        @foreach($days as $day)
+        @foreach($days as $index => $day)
         @php
             $dateKey   = $day->format('Y-m-d');
             $isToday   = $dateKey === $today;
@@ -120,13 +168,17 @@
             $shown     = $dayRuns->take(3);
             $overflow  = $dayRuns->count() - 3;
             $tint      = $this->cellTint($dayRuns);
+            $ring      = $this->dayRingGradient($dayRuns);
             $isWeekend = in_array($day->dayOfWeek, [0, 6]);
         @endphp
 
         <button
             wire:click="selectDate('{{ $dateKey }}')"
+            x-data="{ shown: false }"
+            x-init="setTimeout(() => shown = true, {{ min($index * 8, 200) }})"
+            x-bind:class="shown ? 'opacity-100 scale-100' : 'opacity-0 scale-95'"
             class="group relative min-h-[110px] p-2.5 text-left
-                   transition-all duration-150
+                   transition-all duration-300
                    {{ $tint }}
                    {{ $isWeekend && !$isToday ? 'bg-white/[0.01]' : '' }}
                    {{ $isSelected ? 'bg-amber-500/8 ring-1 ring-inset ring-amber-500/40' : 'hover:bg-white/[0.04]' }}
@@ -134,14 +186,26 @@
                    focus:outline-none focus:ring-1 focus:ring-inset focus:ring-amber-500/30"
             aria-label="{{ $day->format('F j, Y') }}{{ $dayRuns->count() ? ', '.$dayRuns->count().' runs' : '' }}"
         >
-            {{-- Date number --}}
+            {{-- Date number, wrapped in a conic-gradient completion ring when it has runs --}}
             <div class="flex items-start justify-between mb-2">
-                <span class="inline-flex items-center justify-center
-                             {{ $isToday
-                                 ? 'size-7 rounded-full bg-amber-500 text-gray-950 font-bold text-sm shadow-[0_0_12px_rgba(251,191,36,0.6)]'
-                                 : 'size-7 text-sm font-medium '.($isCurrent ? 'text-gray-300' : 'text-gray-600') }}">
-                    {{ $day->day }}
-                </span>
+                @if($isToday)
+                    <span class="inline-flex items-center justify-center size-7 rounded-full
+                                 bg-amber-500 text-gray-950 font-bold text-sm shadow-[0_0_12px_rgba(251,191,36,0.6)]">
+                        {{ $day->day }}
+                    </span>
+                @elseif($ring)
+                    <span class="relative inline-flex items-center justify-center size-7 rounded-full p-[2px]" style="background: {{ $ring }}">
+                        <span class="flex items-center justify-center size-full rounded-full bg-gray-900/90
+                                     text-sm font-medium {{ $isCurrent ? 'text-gray-200' : 'text-gray-600' }}">
+                            {{ $day->day }}
+                        </span>
+                    </span>
+                @else
+                    <span class="inline-flex items-center justify-center size-7 text-sm font-medium
+                                 {{ $isCurrent ? 'text-gray-300' : 'text-gray-600' }}">
+                        {{ $day->day }}
+                    </span>
+                @endif
 
                 {{-- Overflow badge --}}
                 @if($overflow > 0)
@@ -166,6 +230,19 @@
             </div>
         </button>
         @endforeach
+    </div>
+
+    </div>
+    </div>
+
+    {{-- ── Legend ──────────────────────────────────────────────────────── --}}
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-2 px-6 py-3.5 border-t border-white/8 bg-white/[0.03] text-xs font-medium text-gray-300">
+        <span class="font-bold text-gray-200 uppercase tracking-wider text-[10px]">Legend</span>
+        <span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-emerald-400"></span>Completed</span>
+        <span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-rose-400"></span>Failed</span>
+        <span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-blue-400"></span>Running</span>
+        <span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-slate-400"></span>Pending</span>
+        <span class="ml-auto hidden sm:inline text-gray-400">← → change month · T today</span>
     </div>
 </div>
 
@@ -271,5 +348,7 @@
     </div>
 </div>
 @endif
+
+</div>
 
 </x-filament-panels::page>
